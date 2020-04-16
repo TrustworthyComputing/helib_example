@@ -9,9 +9,27 @@ Then download or clone this HElib example repository e.g.,
 git clone -b master https://github.com/TrustworthyComputing/helib_example.git
 ```
 
+Create a new environmental variable to point to the HElib installation directory:
+```
+export HELIB_INSTALL_DIR="/home/...your-custom-path.../helib_install/helib_pack/"
+```
+
+Point the `LD_LIBRARY_PATH` environmental variable to the helib installation directory:
+```
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HELIB_INSTALL_DIR/lib
+```
+
+## Build this example
+
 Compile instructions:
 ```
-g++ mul_test.cpp -L $(PATH_TO_HELIB_INSTALLATION)/helib_install/helib_pack/lib/ -I $(PATH_TO_HELIB_INSTALLATION)/helib_install/helib_pack/include -lntl -lhelib -lgmp -lpthread
+g++ -o mul_test.out mul_test.cpp -L $HELIB_INSTALL_DIR/lib/ -I $HELIB_INSTALL_DIR/include -lntl -lhelib -lgmp -lpthread
+```
+
+## Run HElib example
+Finally, to run the example type:
+```
+./mul_test.out
 ```
 
 
