@@ -32,5 +32,7 @@ Finally, to run the example type:
 ./mul_test.out
 ```
 
+## PALISADE example
+Also, check out our [PALISADE example](https://github.com/TrustworthyComputing/palisade_example).
 
 [badge-license]: https://img.shields.io/badge/license-MIT-green.svg?style=flat-square
