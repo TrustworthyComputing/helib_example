@@ -1,14 +1,4 @@
-/* Copyright (C) 2019 IBM Corp.
-* This program is Licensed under the Apache License, Version 2.0
-* (the "License"); you may not use this file except in compliance
-* with the License. You may obtain a copy of the License at
-*   http://www.apache.org/licenses/LICENSE-2.0
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License. See accompanying LICENSE file.
-*/
+
 #include <iostream>
 
 #include <helib/helib.h>
@@ -20,12 +10,12 @@ int main(int argc, char *argv[]) {
 
     long p = 1021;      // Plaintext prime modulus
     long r = 1;         // Hensel lifting (default = 1)
-    long bits = 320;    // Number of bits of the modulus chain
+    long bits = 500;    // Number of bits of the modulus chain
     long c = 2;         // Number of columns of Key-Switching matix (default = 2 or 3)
-    long k = 128;
-    long s = 4;
-    long d = 1;
-    long w = 64;
+    long k = 128;       // Security level
+    long s = 4;         // Minimum number of plaintext slots
+    long d = 1;         // Embedding degree
+    long w = 64;        // hamming weight of secret key
 
     bool param_choice = false;
     if (param_choice) {
@@ -85,19 +75,24 @@ int main(int argc, char *argv[]) {
 
     // Create a ciphertext
     helib::Ctxt ctxt(public_key);
+    helib::Ctxt prod(public_key);
     // Encrypt the plaintext using the public_key
     ea.encrypt(ctxt, public_key, ptxt);
+    prod = ctxt;
 
-    for (int i = 0; i < 4; i++) {
-        ctxt *= ctxt;
+    for (int i = 0; i < 7; i++) {
+        std::cout << "ctxt^" << i+1 << std::endl;
+        std::cout << "Capacity: " << prod.capacity() << std::endl;
+        std::cout << "Noise bound: " << prod.getNoiseBound() << std::endl;
+        prod *= ctxt;
     }
 
     // Decrypt the modified ciphertext
     std::vector<long> decrypted_rep(nslots);
-    ea.decrypt(ctxt, secret_key, decrypted_rep);
+    ea.decrypt(prod, secret_key, decrypted_rep);
 
     // Print the decrypted plaintext
-    std::cout << "Decrypted Replicated Sum: " << helib::vecToStr(decrypted_rep) << std::endl;
+    std::cout << "Decrypted Product: " << helib::vecToStr(decrypted_rep) << std::endl;
 
     return EXIT_SUCCESS;
 }
