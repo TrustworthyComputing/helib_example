@@ -3,6 +3,7 @@
 
 #include <helib/helib.h>
 #include <helib/replicate.h>
+#include <helib/keySwitching.h>
 
 
 /*  Example of BGV scheme  */
@@ -10,10 +11,10 @@ int main(int argc, char *argv[]) {
 
     long p = 1021;      // Plaintext prime modulus
     long r = 1;         // Hensel lifting (default = 1)
-    long bits = 500;    // Number of bits of the modulus chain
+    long bits = 433;    // Number of bits of the modulus chain
     long c = 2;         // Number of columns of Key-Switching matix (default = 2 or 3)
     long k = 128;       // Security level
-    long s = 4;         // Minimum number of plaintext slots
+    long s = 1;         // Minimum number of plaintext slots
     long d = 1;         // Embedding degree
     long w = 64;        // hamming weight of secret key
 
@@ -38,6 +39,11 @@ int main(int argc, char *argv[]) {
     std::cout  << "Building modulus chain..." << std::endl;
     buildModChain(context, bits, c);
 
+    int primeSizes[25];
+    for(int i = 0; i < 25; i++) {
+      primeSizes[i] = int(round(log2(context.ithPrime(i))));
+    }
+
     // Print the context
     context.zMStar.printout();
     std::cout << std::endl;
@@ -54,7 +60,6 @@ int main(int argc, char *argv[]) {
     std::cout << "Generating key-switching matrices..." << std::endl;
     // Compute key-switching matrices that we need
     helib::addSome1DMatrices(secret_key);
-
     // Public key management
     // Set the secret key (upcast: SecKey is a subclass of PubKey)
     const helib::PubKey& public_key = secret_key;
@@ -69,8 +74,9 @@ int main(int argc, char *argv[]) {
     // Create a vector of long with nslots elements
     std::vector<long> ptxt(nslots);
     // Set it with numbers 0..nslots - 1
+
     for (int i = 0; i < nslots; ++i) {
-        ptxt[i] = i;
+        ptxt[i] = nslots - i;
     }
 
     // Create a ciphertext
@@ -78,13 +84,28 @@ int main(int argc, char *argv[]) {
     helib::Ctxt prod(public_key);
     // Encrypt the plaintext using the public_key
     ea.encrypt(ctxt, public_key, ptxt);
+    std::vector<helib::CtxtPart> ctxt_parts = ctxt.getParts();
+    helib::IndexMap<NTL::vec_long> data = ctxt_parts[1].getMap();
+    std::cout << data.getIndexSet() << std::endl;
+    // long int ctxt_size = 0;
+    // for (int i = 6; i < 12; i++) {
+    //   ctxt_size += data[i].length();
+    // }
+    // std::cout << ctxt_size * 8 << std::endl;
+    // NTL::vec_long first_prime_data = data[data.getIndexSet().first()];
+    // std::cout << first_prime_data.length() << std::endl;
     prod = ctxt;
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 15; i++) {
         std::cout << "ctxt^" << i+1 << std::endl;
         std::cout << "Capacity: " << prod.capacity() << std::endl;
         std::cout << "Noise bound: " << prod.getNoiseBound() << std::endl;
-        prod *= ctxt;
+        int modSize = 0;
+        for (long i = prod.getPrimeSet().first(); i <= prod.getPrimeSet().last(); i = prod.getPrimeSet().next(i)) {
+          modSize += primeSizes[i];
+        }
+
+        prod.multiplyBy(ctxt);
     }
 
     // Decrypt the modified ciphertext
