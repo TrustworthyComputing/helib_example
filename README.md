@@ -2,7 +2,8 @@
 
 ## Pre-requisites
 
-To build this example, first, you need to have [HElib](https://github.com/homenc/HElib) installed on your system. Installation instructions are provided [here](https://github.com/homenc/HElib/blob/master/INSTALL.md).
+To build this example, first, you need to have [HElib](https://github.com/homenc/HElib) installed on your system. Installation instructions are provided [here](https://github.com/homenc/HElib/blob/master/INSTALL.md). NOTE: replace the HElib source files with the modified source files provided in this repo
+before installing.
 
 Then download or clone this HElib example repository e.g.,
 ```
@@ -27,9 +28,9 @@ g++ -o mul_test.out mul_test.cpp -L $HELIB_INSTALL_DIR/lib/ -I $HELIB_INSTALL_DI
 ```
 
 ## Run HElib example
-Finally, to run the example type:
+Finally, to run the example type (first argument is the number of multiplications, second argument is the size of the total bits of the ctxt primes):
 ```
-./mul_test.out
+./mul_test.out 15 500
 ```
 
 ## PALISADE example

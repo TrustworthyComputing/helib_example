@@ -4,6 +4,7 @@
 #include <helib/helib.h>
 #include <helib/replicate.h>
 #include <helib/keySwitching.h>
+#include <string.h>
 
 
 /*  Example of BGV scheme  */
@@ -11,27 +12,20 @@ int main(int argc, char *argv[]) {
 
     long p = 1021;      // Plaintext prime modulus
     long r = 1;         // Hensel lifting (default = 1)
-    long bits = 433;    // Number of bits of the modulus chain
+    int bits = atoi(argv[2]);    // Number of bits of the modulus chain
     long c = 2;         // Number of columns of Key-Switching matix (default = 2 or 3)
     long k = 128;       // Security level
     long s = 1;         // Minimum number of plaintext slots
     long d = 1;         // Embedding degree
     long w = 64;        // hamming weight of secret key
+    long m = 27727;      // Cyclotomic polynomial - defines phi(m)
 
-    bool param_choice = false;
-    if (param_choice) {
-        p=2;
-        r=1;
-        bits=230;
-        c=2;
-        k=128;
-        s=4;
-        d=10;
-        w=64;
+
+    if (bits > 512) {
+      std::cout << "Mod chain cannot be greater than 512 bits!" << std::endl;
+      return -1;
     }
 
-    // Cyclotomic polynomial - defines phi(m)
-    long m = helib::FindM(k, bits, c, p, d, s, 0);
     std::cout << "Initialising context object..." << std::endl;
     // Intialise context
     helib::Context context(m, p, r);
@@ -50,6 +44,10 @@ int main(int argc, char *argv[]) {
 
     // Print the security level
     std::cout << "Security: " << context.securityLevel() << std::endl;
+    if (context.securityLevel() < 120) {
+      std::cout << "Security level is too low!" << std::endl;
+      return -1;
+    }
 
     // Secret key management
     std::cout << "Creating secret key..." << std::endl;
@@ -84,9 +82,6 @@ int main(int argc, char *argv[]) {
     helib::Ctxt prod(public_key);
     // Encrypt the plaintext using the public_key
     ea.encrypt(ctxt, public_key, ptxt);
-    std::vector<helib::CtxtPart> ctxt_parts = ctxt.getParts();
-    helib::IndexMap<NTL::vec_long> data = ctxt_parts[1].getMap();
-    std::cout << data.getIndexSet() << std::endl;
     // long int ctxt_size = 0;
     // for (int i = 6; i < 12; i++) {
     //   ctxt_size += data[i].length();
@@ -95,9 +90,10 @@ int main(int argc, char *argv[]) {
     // NTL::vec_long first_prime_data = data[data.getIndexSet().first()];
     // std::cout << first_prime_data.length() << std::endl;
     prod = ctxt;
-
-    for (int i = 0; i < 15; i++) {
-        std::cout << "ctxt^" << i+1 << std::endl;
+    std::cout << "ctxt modulus size (before mod switch):" << context.logOfProduct(prod.getPrimeSet())/log(2.0) + 0.5 << std::endl;
+    for (int i = 0; i < atoi(argv[1]); i++) {
+        std::cout << "Prod ctxt primes:" << prod.getPrimeSet() << std::endl;
+        std::cout << "ctxt^" << i+2 << std::endl;
         std::cout << "Capacity: " << prod.capacity() << std::endl;
         std::cout << "Noise bound: " << prod.getNoiseBound() << std::endl;
         int modSize = 0;
